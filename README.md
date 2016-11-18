@@ -12,7 +12,7 @@ startService(serviceIntent);
 A notification will be shown, if the service is running. You can stop it every time by clicking on the notification.
 
 ## Versions
-### v01.b
+### v0.1b
 Currently, DebugGhost only supports browsing through your projects sqlite database through a webbrowser on a machine in the same network.
 *At this state, this was only tested using a Mac (Sierra) with Chrome.*
 
