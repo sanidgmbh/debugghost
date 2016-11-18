@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>DebugGhost - SQLite-Browser</title>
+
+    <style>
+        body {
+          font-family: Helvetica, Arial, Sans-Serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+        th {
+            padding: 5px;
+        }
+        td {
+            padding: 5px;
+        }
+        #main {
+            margin-left: 470px;
+            background:#adebad;
+            padding: 10px;
+            min-height: 600px;
+            overflow: auto;
+        }
+        #nav {
+            float: left;
+            width: 450px;
+            background:#ffd699;
+            padding: 10px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>DebugGhost - SQLite-Browser</h2>
+
+<div id="container">
+    <div id="nav">
+        <b>Tables</b>
+        <br/><br/>
+        {{TABLE_LIST}}
+    </div>
+    <div id="main">
+        <b>Current table: {{SELECTED_TABLE_NAME}}</b>
+        <br/><br/><br/>
+        {{SELECTED_TABLE}}
+        <div style="clear: both;"></div>
+    </div>
+</div>
+
+</body>
+</html>
