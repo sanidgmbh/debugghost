@@ -5,8 +5,8 @@ Android Debugging Tool for Developers
 The following lines will start the service:
 ```bash
 Intent serviceIntent = new Intent(this, DebugGhostService.class);
-serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_NAME, MySalusDatabaseHelper.DATABASE_NAME);
-serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_VERSION, MySalusDatabaseHelper.DATABASE_VERSION);
+serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_NAME, MyDB.DATABASE_NAME);
+serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_VERSION, MyDB.DATABASE_VERSION);
 startService(serviceIntent);
 ```
 A notification will be shown, if the service is running. You can stop it every time by clicking on the notification.
