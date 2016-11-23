@@ -1,15 +1,21 @@
+<img align="right" src="https://raw.githubusercontent.com/sanidgmbh/debugghost/master/debugghostlib/src/main/res/mipmap-xxxhdpi/ic_ghost.png" />
 # DebugGhost
 Android Debugging Tool for Developers
 
 ## Getting started
 The following lines will start the service:
-```bash
+```java
 Intent serviceIntent = new Intent(this, DebugGhostService.class);
 serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_NAME, MyDB.DATABASE_NAME);
 serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_VERSION, MyDB.DATABASE_VERSION);
 startService(serviceIntent);
 ```
 A notification will be shown, if the service is running. You can stop it every time by clicking on the notification.
+
+## Not for production
+DebugGhost is for developers and not for production purpose. Be aware of, that this project has **no focus on security or performance**. It's meant to be used while developing your app.
+
+*TODO: example on how to setup app-project to compile DebugGhostLib only in a development-flavour*
 
 ## Versions
 ### v0.1b
