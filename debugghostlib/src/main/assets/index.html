@@ -32,16 +32,27 @@
         #nav {
             float: left;
             width: 450px;
-            background:#ffd699;
+            background: #ffd699;
             padding: 10px;
             height: 600px;
+        }
+        #controls {
+            width: 100%;
+            padding-left: 10px;
+            background: #DCDCDC;
+            min-height: 50px;
         }
     </style>
 </head>
 <body>
 
-<h2>DebugGhost - SQLite-Browser</h2>
-
+<img src="/img/ic_ghost.png" alt="DebugGhost Logo" style="float: left; padding-right: 20px;" />
+<h2 style="padding-top: 20px;">DebugGhost - SQLite-Browser</h2>
+<div style="clear: both;"></div>
+<br />
+<div id="controls">
+    <span style="line-height: 50px;"><a href="/db/download/{{DATABASE_NAME}}">Download: {{DATABASE_NAME}}</a></span>
+</div>
 <div id="container">
     <div id="nav">
         <b>Tables</b>

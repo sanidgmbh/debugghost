@@ -55,14 +55,17 @@ public class GhostDatabaseHelper extends SQLiteOpenHelper {
             sb.append("</li>");
         }
         sb.append("</ul>");
+        c.close();
 
         return sb.toString();
     }
 
     public String getHTMLTable(String tableName) {
         StringBuilder sb = new StringBuilder();
+        String out;
+        Cursor c = null;
         try {
-            Cursor c = sqlQuery(QUERY_TABLE.replace("##TABLE##", tableName));
+            c = sqlQuery(QUERY_TABLE.replace("##TABLE##", tableName));
 
             sb.append("<table>");
             sb.append("<tr>");
@@ -83,10 +86,17 @@ public class GhostDatabaseHelper extends SQLiteOpenHelper {
                 sb.append("</tr>");
             }
             sb.append("</table>");
-            return sb.toString();
+
+            out = sb.toString();
         } catch (SQLiteException e) {
-            return "Could not read table '"+tableName + "'. Exception: " + e.getMessage();
+            out = "Could not read table '"+tableName + "'. Exception: " + e.getMessage();
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
+
+        return out;
     }
 
     public static String stringFromCursor(Cursor c, String field) {
@@ -132,4 +142,11 @@ public class GhostDatabaseHelper extends SQLiteOpenHelper {
         return (val > 0) ? true : false;
     }
 
+    public String getDbName() {
+        return mDbName;
+    }
+
+    public String getPathToDbFile() {
+        return mContext.getDatabasePath(mDbName).getPath();
+    }
 }

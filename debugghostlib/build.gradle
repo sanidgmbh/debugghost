@@ -8,11 +8,11 @@ android {
         minSdkVersion 14
         targetSdkVersion 25
         versionCode 1
-        versionName "0.1b"
+        versionName "0.1.1b"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -23,6 +23,12 @@ android {
             minifyEnabled false
         }
     }
+
+    /*
+    publishNonDefault true
+    */
+
+
 }
 
 dependencies {
