@@ -2,6 +2,13 @@
 # DebugGhost
 Android Debugging Tool for Developers
 
+## What's this for?
+The main goal is to loosely couple a development tool to your project without the need of a lot of if-else conditions, adding "debug-menu-items" to your action bar to run some test code and so on. In my case, the biggest need was getting my current sqlite database and having a look into it. That's where DebugGhost startet. DebugGhost runs a lightweight server in the context of your app. You can connect to it via WebBrowser from your development maschine and browse the sqlite database and also download it.
+
+DebugGhost does **not** use the adb. It uses WiFi, so your development maschine has to be in the same local network and devices have to be able to find each other (that's not a givin in guest Wifis).
+
+*more features are planned, but one step after another ;)*
+
 ## Getting started
 The following lines will start the service:
 ```java
