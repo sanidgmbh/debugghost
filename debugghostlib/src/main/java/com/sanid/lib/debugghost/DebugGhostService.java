@@ -24,18 +24,27 @@ import android.widget.Toast;
 
 import com.sanid.lib.debugghost.server.GhostServer;
 
+import java.util.ArrayList;
+
 public class DebugGhostService extends Service implements GhostServer.OnServerListener {
 
     private static final String LOG_TAG = "DebugGhost";
 
     public static final String INTENT_EXTRA_DB_NAME = "INTENT_EXTRA_DB_NAME";
     public static final String INTENT_EXTRA_DB_VERSION = "INTENT_EXTRA_DB_VERSION";
+    public static final String INTENT_EXTRA_SERVER_PORT = "INTENT_EXTRA_SERVER_PORT";
+    public static final String INTENT_EXTRA_COMMAND_MAP = "INTENT_EXTRA_COMMAND_MAP";
+
+    public static final String INTENT_FILTER_COMMANDS = "DebugGhostServiceCommandIntentFilter";
+    public static final String INTENT_SERVICE_DEBUG_COMMAND_NAME = "INTENT_SERVICE_DEBUG_COMMAND_NAME";
+    public static final String INTENT_SERVICE_DEBUG_COMMAND_VALUE = "INTENT_SERVICE_DEBUG_COMMAND_VALUE";
 
     private static final String INTENT_SERVICE_FILTER = "DebugGhostServiceIntentFilter";
     private static final String INTENT_SERVICE_ACTION = "INTENT_SERVICE_ACTION";
     private static final int INTENT_SERVICE_ACTION_STOP_SERVICE = 1;
     private static final int INTENT_SERVICE_ACTION_STOP_SERVER = 2;
     private static final int INTENT_SERVICE_ACTION_START_SERVER = 3;
+
     private static final int INTENT_SERVICE_ACTION_SHOW_GHOST_PANEL = 4;
 
     private static final int GHOST_NOTIFICATION_ID = 666;
@@ -61,7 +70,8 @@ public class DebugGhostService extends Service implements GhostServer.OnServerLi
     public void onCreate() {
         super.onCreate();
 
-        // the following is to show the little ghost on the screen which can be dragged. not of interest at the moment
+        // the following is to show the little ghost on the screen which can be dragged
+        // some fun planned later :)
         gestureDetector = new GestureDetector(this, new SingleTapConfirm());
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
@@ -89,15 +99,21 @@ public class DebugGhostService extends Service implements GhostServer.OnServerLi
 
         handleGhostNotification(null);
 
-        if (intent != null && intent.hasExtra(INTENT_EXTRA_DB_NAME) && intent.hasExtra(INTENT_EXTRA_DB_VERSION)) {
+        String dbName = null;
+        int dbVersion = -1;
+        int port = 8080;
+        ArrayList<String> commands = null;
 
-            String dbName = intent.getStringExtra(INTENT_EXTRA_DB_NAME);
-            int dbVersion = intent.getIntExtra(INTENT_EXTRA_DB_VERSION, 0);
-
-            ghostServer = new GhostServer(getBaseContext(), dbName, dbVersion);
-            ghostServer.setOnServerListener(this);
-            ghostServer.start();
+        if (intent != null) {
+            dbName = intent.getStringExtra(INTENT_EXTRA_DB_NAME);
+            dbVersion = intent.getIntExtra(INTENT_EXTRA_DB_VERSION, -1);
+            port = intent.getIntExtra(INTENT_EXTRA_SERVER_PORT, 8080);
+            commands = intent.getStringArrayListExtra(INTENT_EXTRA_COMMAND_MAP);
         }
+
+        ghostServer = new GhostServer(getBaseContext(), port, dbName, dbVersion, commands);
+        ghostServer.setOnServerListener(this);
+        ghostServer.start();
 
         return super.onStartCommand(intent, flags, startId);
     }

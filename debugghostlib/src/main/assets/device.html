@@ -20,7 +20,7 @@
         .container {
             margin-left: 5px;
         }
-        .col-sm-3, .col-sm-9, .col-sm-4 {
+        .col-sm-3, .col-sm-4, .col-sm-9 {
             padding-right: 5px;
             padding-left: 5px;
         }
@@ -29,18 +29,6 @@
         }
         .container .navbar-header {
             margin-right: 15px;
-        }
-        .btn {
-            margin-bottom: 10px;
-            margin-left: 5px;
-        }
-        .alert {
-            margin-bottom: 10px;
-            margin-left: 5px;
-            margin-right: 5px;
-        }
-        .code {
-            font-family: "Courier New", Courier, monospace;
         }
     </style>
 </head>
@@ -64,8 +52,8 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/">Database</a></li>
-                <li><a href="/device">Device Info</a></li>
+                <li><a href="/">Database</a></li>
+                <li class="active"><a href="/device">Device Info</a></li>
                 <li><a href="/commands">Commands</a></li>
                 <li><a href="https://github.com/sanidgmbh/debugghost" target="_blank">Help</a></li>
             </ul>
@@ -73,38 +61,26 @@
     </div>
 </nav>
 
-{{ALERT_VISIBLE}}
-
-<div style="visibility: {{DATABASE_VISIBLE}};">
-    <a href="/db/download/{{DATABASE_NAME}}">
-        <button type="button" class="btn btn-default">Download {{DATABASE_NAME}}</button>
-    </a>
-</div>
-
-<div style="visibility: {{DATABASE_VISIBLE}};">
-    <div style="clear: both;"></div>
-
-    <div class="col-sm-3">
-        <div class="panel panel-success">
-            <div class="panel-heading">
-                <h3 class="panel-title">Tables</h3>
-            </div>
-            <div class="panel-body">
-                {{TABLE_LIST}}
-            </div>
+<div class="col-sm-4">
+    <div class="panel panel-info" style="margin-left: 5px; margin-right: 5px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">System</h3>
         </div>
-    </div>
-
-    <div class="col-sm-9">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title">Current table: {{SELECTED_TABLE_NAME}}</h3>
-            </div>
-            <div class="panel-body" style="overflow: auto;">
-                {{SELECTED_TABLE}}
-            </div>
+        <div class="panel-body" style="overflow: auto;">
+            {{DEVICE_INFOS}}
         </div>
     </div>
 </div>
+<div class="col-sm-4">
+    <div class="panel panel-info" style="margin-left: 5px; margin-right: 5px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">Screen</h3>
+        </div>
+        <div class="panel-body" style="overflow: auto;">
+            {{SCREEN_INFOS}}
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

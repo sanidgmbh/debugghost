@@ -1,10 +1,13 @@
 package com.sanid.lib.debugghost.server;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
-import com.sanid.lib.debugghost.utils.GhostDatabaseHelper;
-import com.sanid.lib.debugghost.utils.WebServerUtils;
+import com.sanid.lib.debugghost.DebugGhostService;
+import com.sanid.lib.debugghost.utils.GhostDBHelper;
+import com.sanid.lib.debugghost.utils.GhostUtils;
+import com.sanid.lib.debugghost.utils.GhostWebServerUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Created by norbertmoehring on 17/11/2016.
@@ -35,8 +39,8 @@ public class GhostServer {
     private int mStatus = STATUS_RUN;
 
     private final Context mContext;
-    private final GhostDatabaseHelper mDatabaseHelper;
-    private final WebServerUtils mWebServerUtils;
+    private final GhostDBHelper mDatabaseHelper;
+    private final GhostWebServerUtils mGhostWebServerUtils;
     private OnServerListener mListener;
 
     private ServerSocket serverSocket;
@@ -49,16 +53,18 @@ public class GhostServer {
     private final int mLocalPort;
 
     private Thread connectionThread = null;
+    private final ArrayList<String> mCommands;
 
-    public GhostServer(Context context, int serverPort, String dbName, int dbVersion) {
+    public GhostServer(Context context, int serverPort, String dbName, int dbVersion, ArrayList<String> commands) {
         mContext = context;
         mLocalPort = serverPort;
-        mWebServerUtils = new WebServerUtils(mContext);
-        mDatabaseHelper = new GhostDatabaseHelper(context, dbName, dbVersion);
-    }
-
-    public GhostServer(Context context, String dbName, int dbVersion) {
-        this(context, 8080, dbName, dbVersion);
+        mGhostWebServerUtils = new GhostWebServerUtils(mContext);
+        mCommands = commands;
+        if (dbName != null && dbVersion > 0) {
+            mDatabaseHelper = new GhostDBHelper(context, dbName, dbVersion);
+        } else {
+            mDatabaseHelper = null;
+        }
     }
 
     public void setOnServerListener(OnServerListener listener) {
@@ -95,7 +101,7 @@ public class GhostServer {
 
     private void init() {
         try {
-            mLocalIp = mWebServerUtils.getLocalIpAddress();
+            mLocalIp = mGhostWebServerUtils.getLocalIpAddress();
             mAddr = InetAddress.getByName(mLocalIp);
         } catch (Exception e) {
             Log.e(TAG, "Could not obtain local address: " + e.getMessage());
@@ -144,16 +150,16 @@ public class GhostServer {
 
                                     switch (method) {
                                         case "GET":
-                                            if (mWebServerUtils.isBinary(path) || mWebServerUtils.isDbDownload(path)) {
+                                            if (mGhostWebServerUtils.isBinary(path) || mGhostWebServerUtils.isDbDownload(path)) {
                                                 if (sendFile(path, clientSocket.getOutputStream()) == false) {
-                                                    mWebServerUtils.send404(out);
+                                                    mGhostWebServerUtils.send404(out);
                                                 }
                                             } else {
                                                 handleGet(path, out);
                                             }
                                             break;
                                         case "POST":
-                                            handlePost(path, out);
+                                            handlePost(path, in, out);
                                             break;
                                         default:
                                             break;
@@ -187,16 +193,29 @@ public class GhostServer {
     private boolean sendFile(String path, OutputStream outputStream) {
         boolean fileFound = false;
         InputStream is;
-        if (mWebServerUtils.isDbDownload(path)) {
-            is = mWebServerUtils.fileExists(mDatabaseHelper.getPathToDbFile());
+        int cacheTime = 21600;
+        int byteLen = -1;
+        if (mGhostWebServerUtils.isDbDownload(path)) {
+            is = mGhostWebServerUtils.fileExists(mDatabaseHelper.getPathToDbFile());
+            cacheTime = -1;
+        } else if (path.contains("project_application_icon")) {
+            is = mGhostWebServerUtils.fileAppIcon();
+            // TODO get correct content-length
+            byteLen = 13100;
         } else {
-            is = mWebServerUtils.fileExistsInAssets(path);
+            is = mGhostWebServerUtils.fileExistsInAssets(path);
+            // TODO get correct content-length
+            byteLen = 2600;
         }
         if (is != null) {
             try {
-                PrintWriter out = new PrintWriter(outputStream);
-                out.print("ContentType: " + mWebServerUtils.getContentType(path));
-                mWebServerUtils.writeDefaultHeader(HttpURLConnection.HTTP_OK, out);
+                StringBuilder header = new StringBuilder("HTTP/1.1 200 OK\n");
+                header.append("Content-Type: " + mGhostWebServerUtils.getContentType(path)+"\n");
+    //          header.append("Content-Length: " + byteLen +"\n");
+                header.append("\n");
+
+                byte[] contentType = header.toString().getBytes();
+                outputStream.write(contentType, 0, contentType.length);
 
                 byte[] buffer = new byte[1024];
                 int len = is.read(buffer);
@@ -213,12 +232,104 @@ public class GhostServer {
         return fileFound;
     }
 
+    private void handlePost(String path, BufferedReader in, PrintWriter out) {
+        // code for reading post data from
+        // http://stackoverflow.com/questions/3033755/reading-post-data-from-html-form-sent-to-serversocket
+        String postData = "";
+        try {
+            String line;
+            Integer postDataI = 0;
+            while ((line = in.readLine()) != null && (line.length() != 0)) {
+//                System.out.println("HTTP-HEADER: " + line);
+                if (line.indexOf("Content-Length:") > -1) {
+                    postDataI = new Integer(
+                            line.substring(
+                                    line.indexOf("Content-Length:") + 16,
+                                    line.length())).intValue();
+                }
+            }
+
+            // read the post data
+            if (postDataI > 0) {
+                char[] charArray = new char[postDataI];
+                in.read(charArray, 0, postDataI);
+                postData = new String(charArray);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (path.contains("commands")) {
+            String command = path.substring(path.lastIndexOf("/")).replace("/", "");
+
+            Intent commandIntent = new Intent(DebugGhostService.INTENT_FILTER_COMMANDS);
+            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_NAME, command);
+            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_VALUE, postData.replace("data=", ""));
+
+            mContext.sendBroadcast(commandIntent);
+        }
+
+        mGhostWebServerUtils.send301(out, "/commands");
+    }
+
     private void handleGet(String path, PrintWriter out) {
-        String page = mWebServerUtils.getPage(mContext, "/");
+        String page = mGhostWebServerUtils.getPage(mContext, path);
+//        String page = mGhostWebServerUtils.getPage(mContext, "/");
 
         if (page != null) {
-            String selectedTableName = "<i>nothing selected</i>";
-            String selectedTable = "";
+
+            switch (path) {
+                case "commands":
+                case "/commands":
+                    page = handleCommand(page, path);
+                    break;
+                case "device":
+                case "/device":
+                    page = handleDevice(page, path);
+                    break;
+                default:
+                    page = handleIndex(page, path);
+                break;
+            }
+
+            mGhostWebServerUtils.writeDefaultHeader(HttpURLConnection.HTTP_OK, out, 30);
+            out.println(page);
+            out.println();
+            out.flush();
+        } else {
+            mGhostWebServerUtils.send404(out);
+        }
+    }
+
+    private String handleCommand(String page, String path) {
+
+        page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
+//        page = page.replace("{{ALERT_VISIBLE}}", GhostUtils.getNoCommandsAlert(mCommands));
+        page = page.replace("{{COMMAND_LIST}}", GhostUtils.getCommandList(mCommands));
+        page = page.replace("{{COMMAND_LIST_INPUT}}", GhostUtils.getCommandInputList(mCommands));
+
+        return page;
+    }
+
+    private String handleDevice(String page, String path) {
+
+        page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
+        page = page.replace("{{DEVICE_INFOS}}", GhostUtils.getDeviceInfos(mContext));
+        page = page.replace("{{SCREEN_INFOS}}", GhostUtils.getScreenInfos(mContext));
+
+        return page;
+    }
+
+    private String handleIndex(String page, String path) {
+        String selectedTableName = "<i>nothing selected</i>";
+        String selectedTable = "";
+
+        page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
+        page = page.replace("{{DATABASE_VISIBLE}}", (mDatabaseHelper != null) ? "visible" : "hidden");
+        page = page.replace("{{ALERT_VISIBLE}}", GhostUtils.getNoDatabaseAlert(mDatabaseHelper));
+
+        if (mDatabaseHelper != null) {
+            page = page.replace("{{DATABASE_NAME}}", mDatabaseHelper.getDbName());
 
             String htmlTables = mDatabaseHelper.getHTMLTables();
             page = page.replace("{{TABLE_LIST}}", htmlTables);
@@ -227,22 +338,12 @@ public class GhostServer {
                 selectedTableName = path.substring(path.lastIndexOf("/") + 1, path.length());
                 selectedTable = mDatabaseHelper.getHTMLTable(selectedTableName);
             }
-
-            page = page.replace("{{SELECTED_TABLE_NAME}}", selectedTableName);
-            page = page.replace("{{SELECTED_TABLE}}", selectedTable);
-            page = page.replace("{{DATABASE_NAME}}", mDatabaseHelper.getDbName());
-
-            mWebServerUtils.writeDefaultHeader(HttpURLConnection.HTTP_OK, out);
-            out.println(page);
-            out.println();
-            out.flush();
-        } else {
-            mWebServerUtils.send404(out);
         }
-    }
 
-    private void handlePost(String path, PrintWriter out) {
-        // TODO
+        page = page.replace("{{SELECTED_TABLE_NAME}}", selectedTableName);
+        page = page.replace("{{SELECTED_TABLE}}", selectedTable);
+
+        return page;
     }
 
     private String[] canHandleData(String input) {

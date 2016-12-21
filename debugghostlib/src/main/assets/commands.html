@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>DebugGhost</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- pretty print java code -->
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+
+    <script>
+        function postCommand(path, value) {
+            var form = document.getElementById("form");
+            var data = document.getElementById("data");
+            data.setAttribute("value", value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+        function postCommandValue(path, inputFieldName) {
+            var form = document.getElementById("form");
+            var data = document.getElementById("data");
+            var inputField = document.getElementById(inputFieldName);
+            data.setAttribute("value", inputField.value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+    </script>
+
+    <style>
+        body {
+          font-family: Helvetica, Arial, Sans-Serif;
+        }
+        .container {
+            margin-left: 5px;
+        }
+        .col-sm-3, .col-sm-4, .col-sm-9 {
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+        .navbar {
+            margin-bottom: 10px;
+        }
+        .container .navbar-header {
+            margin-right: 15px;
+        }
+        .alert {
+            margin-bottom: 10px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        .code {
+            font-family: "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+
+<img src="/img/ic_ghost.png" alt="DebugGhost Logo" style="float: left; padding-right: 20px; padding-left: 10px;" />
+<h2 style="padding-top: 20px; margin-top: 0px;">DebugGhost</h2>
+<div style="clear: both;"></div>
+
+<nav class="navbar navbar-default" style="margin-top: 5px;">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <img src="/img/project_application_icon.png" width="48" height="48" />
+            <span class="navbar-brand" href="/">App: {{PROJECT_NAME}}</span>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Database</a></li>
+                <li><a href="/device">Device Info</a></li>
+                <li class="active"><a href="/commands">Commands</a></li>
+                <li><a href="https://github.com/sanidgmbh/debugghost" target="_blank">Help</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<form id="form" action="" method="post">
+    <input id="data" type="hidden" name="data" value="schalllalaa" />
+</form>
+
+<div class="col-sm-4">
+    <div class="panel panel-info" style="margin-left: 5px; margin-right: 5px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">How to use GhostCommands</h3>
+        </div>
+        <div class="panel-body" style="overflow: auto;">
+            GhostCommands execute code in your app with just clicking on the button in your browser.
+            <br /><br />
+            To create a command, your class must conform to the <span class="code">GhostCommand</span>-Interface. You can also just extend the
+            class <span class="code">AbstractGhostCommand</span>. For a demo, you can copy the following class:<br />
+<pre class="prettyprint lang-java">
+public class GhostToastCommand extends AbstractGhostCommand {<br /><br />
+    public GhostToastCommand(Context context, String label, String key, String value) {<br />
+        super(context, label, key, value);<br />
+    }<br />
+<br />
+    @Override<br />
+    public void execute(String value) {<br />
+        Toast.makeText(mContext, "GhostToastCommand: " + value, Toast.LENGTH_SHORT).show();<br />
+    }<br />
+}<br />
+</pre>
+            <br />
+            Before calling <span class="code">startDebugGhost()</span> on your DebugGhostBridge, make sure you add your command:<br /><br />
+<pre class="prettyprint lang-java">
+public class DebugGhostBridge extends AbstractDebugGhostBridge {<br />
+<br />
+    public DebugGhostBridge(Context context, String databaseName, int databaseVersion) {<br />
+        super(context, databaseName, databaseVersion);<br />
+        initCommands();<br />
+    }<br />
+    <br />
+    private void initCommands() {<br />
+        addGhostCommand(new GhostToastCommand(mContext, "Send scary toast", "scary_toast", "Buhuu"));<br />
+    }<br />
+}
+</pre>
+            <br />
+            This will display a button to the right of this panel saying "Send scary toast". If you click it, you app will show the Toast.
+        </div>
+    </div>
+</div>
+
+
+<div class="col-sm-2">
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <h3 class="panel-title">Simple commands</h3>
+        </div>
+        <div class="panel-body">
+            <div class="btn-group-vertical" role="group" aria-label="Simple commands">
+                {{COMMAND_LIST}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-2">
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <h3 class="panel-title">Commands with values</h3>
+        </div>
+        <div class="panel-body">
+            {{COMMAND_LIST_INPUT}}
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
