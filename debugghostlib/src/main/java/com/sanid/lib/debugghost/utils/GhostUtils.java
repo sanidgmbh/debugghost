@@ -175,11 +175,10 @@ public class GhostUtils {
         if (databaseHelper != null) {
             return "";
         } else {
-            String warn = "<div class=\"alert alert-warning\" role=\"alert\">\n" +
-                    "    <strong>No database set</strong><br />\n" +
-                    "    Use the intent flags<br />\n" +
-                    "    <span class=\"code\">DebugGhostService.INTENT_EXTRA_DB_NAME</span> and<br />\n" +
-                    "    <span class=\"code\">DebugGhostService.INTENT_EXTRA_DB_VERSION</span> when starting the service.\n" +
+            String warn = "<div class=\"alert alert-warning\" role=\"alert\">" +
+                    "<strong>No database set!</strong><br /><br />" +
+                    "Pass the database name and version to the DebugGhostBridge constructor if you have a SQLite database in your project.<br />" +
+                    "If you have no SQLite database in your project, just ignore this message." +
                     "</div>";
             return warn;
         }
