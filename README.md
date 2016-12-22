@@ -21,6 +21,7 @@ Follow these steps to get DebugGhost up and running in your project:
 * [setup Application class](../../wiki/1---Getting-started#setup-application-class) 
     * [include DebugGhostBridge](../../wiki/1---Getting-started#include-Debugghostbridge)
 
+[Here's a sample project for testing](https://github.com/sanidgmbh/debugghostexample)
 
 ## Not for production
 DebugGhost is for developers and not for production purpose. Be aware of, that this project has **no focus on security or performance**. It's meant to be used while developing your app.
