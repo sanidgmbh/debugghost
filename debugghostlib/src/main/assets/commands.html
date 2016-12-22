@@ -83,7 +83,7 @@
                 <li><a href="/">Database</a></li>
                 <li><a href="/device">Device Info</a></li>
                 <li class="active"><a href="/commands">Commands</a></li>
-                <li><a href="https://github.com/sanidgmbh/debugghost" target="_blank">Help</a></li>
+                <li><a href="https://github.com/sanidgmbh/debugghost/wiki" target="_blank">Help</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -93,7 +93,7 @@
     <input id="data" type="hidden" name="data" value="schalllalaa" />
 </form>
 
-<div class="col-sm-4">
+<div class="col-sm-3">
     <div class="panel panel-info" style="margin-left: 5px; margin-right: 5px;">
         <div class="panel-heading">
             <h3 class="panel-title">How to use GhostCommands</h3>
@@ -102,36 +102,9 @@
             GhostCommands execute code in your app with just clicking on the button in your browser.
             <br /><br />
             To create a command, your class must conform to the <span class="code">GhostCommand</span>-Interface. You can also just extend the
-            class <span class="code">AbstractGhostCommand</span>. For a demo, you can copy the following class:<br />
-<pre class="prettyprint lang-java">
-public class GhostToastCommand extends AbstractGhostCommand {<br /><br />
-    public GhostToastCommand(Context context, String label, String key, String value) {<br />
-        super(context, label, key, value);<br />
-    }<br />
-<br />
-    @Override<br />
-    public void execute(String value) {<br />
-        Toast.makeText(mContext, "GhostToastCommand: " + value, Toast.LENGTH_SHORT).show();<br />
-    }<br />
-}<br />
-</pre>
+            class <span class="code">AbstractGhostCommand</span>
             <br />
-            Before calling <span class="code">startDebugGhost()</span> on your DebugGhostBridge, make sure you add your command:<br /><br />
-<pre class="prettyprint lang-java">
-public class DebugGhostBridge extends AbstractDebugGhostBridge {<br />
-<br />
-    public DebugGhostBridge(Context context, String databaseName, int databaseVersion) {<br />
-        super(context, databaseName, databaseVersion);<br />
-        initCommands();<br />
-    }<br />
-    <br />
-    private void initCommands() {<br />
-        addGhostCommand(new GhostToastCommand(mContext, "Send scary toast", "scary_toast", "Buhuu"));<br />
-    }<br />
-}
-</pre>
-            <br />
-            This will display a button to the right of this panel saying "Send scary toast". If you click it, you app will show the Toast.
+            For more information, check out the <a href="https://github.com/sanidgmbh/debugghost/wiki/2---Configuration#using-ghostcommands" target="_blank">DebugGhost Wiki</a>.
         </div>
     </div>
 </div>
