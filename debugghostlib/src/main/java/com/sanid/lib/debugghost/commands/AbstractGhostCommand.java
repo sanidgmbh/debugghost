@@ -50,5 +50,5 @@ public abstract class AbstractGhostCommand implements GhostCommand {
     }
 
     @Override
-    public abstract void execute(String value);
+    public abstract void execute(String data);
 }

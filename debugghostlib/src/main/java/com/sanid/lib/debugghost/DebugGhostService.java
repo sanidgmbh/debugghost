@@ -267,9 +267,11 @@ public class DebugGhostService extends Service implements GhostServer.OnServerLi
     }
 
     private void bustGhost() {
+        // TODO stop self seems not to be working
         stopServer();
         stopSelf();
     }
+
 
     protected BroadcastReceiver stopServiceReceiver = new BroadcastReceiver() {
         @Override
