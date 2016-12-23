@@ -28,7 +28,7 @@ DebugGhost is for developers and not for production purpose. Be aware of, that t
 
 ## Versions
 
-### v1.0b (7d0ac8d - for jitpack.io)
+### v1.0b
 * fixed HTTP protocol, now working in diverse browsers
 * showing app icon
 * added bootstrap UI for HTML pages
