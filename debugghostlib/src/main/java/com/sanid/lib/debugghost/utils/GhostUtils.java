@@ -1,6 +1,7 @@
 package com.sanid.lib.debugghost.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -12,6 +13,8 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -262,5 +265,70 @@ public class GhostUtils {
         }
 
         return sb.toString();
+    }
+
+    public static String getSharedPreferences(Context context) {
+        /*
+        /data/data/(package)/shared_prefs/*.xml
+         */
+        String pkg = context.getPackageName();
+        File prefsXmlFolder = new File("/data/data/"+pkg+"/shared_prefs/");
+        String[] prefFiles = prefsXmlFolder.list(new PrefsXmlFileFilter());
+        String[] prefNames = new String[prefFiles.length];
+
+        if (prefFiles.length == 0) {
+            return "<i>no shared preferences found</i>";
+        }
+
+        for (int i = 0; i < prefFiles.length; i++) {
+            prefNames[i] = prefFiles[i].substring(0, prefFiles[i].lastIndexOf('.'));
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (String prefName : prefNames) {
+            sb.append("<div class=\"col-sm-5\">");
+            sb.append("<div class=\"panel panel-info\" style=\"margin-left: 5px; margin-right: 5px;\">");
+            sb.append("<div class=\"panel-heading\">");
+            sb.append("<h3 class=\"panel-title\">"+prefName+"</h3>");
+            sb.append("</div>");
+            sb.append("<div class=\"panel-body\" style=\"overflow: auto;\">");
+
+            final SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+            final Map<String, ?> allEntries = prefs.getAll();
+
+            if (allEntries.size() == 0) {
+                sb.append("<i>No shared preferences for the name '"+prefName+"' found</i>");
+            } else {
+                sb.append("<table class=\"table table-striped\">");
+                sb.append("<tbody>");
+
+                for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                    sb.append("<tr><th>");
+                    sb.append(entry.getKey());
+                    sb.append("</th><td>");
+                    sb.append(entry.getValue().toString());
+                    sb.append("</td></tr>");
+                }
+                sb.append("<tbody>");
+                sb.append("</table>");
+            }
+
+            sb.append("</div>");
+            sb.append("</div>");
+            sb.append("</div><div style=\"clear: both;\"></div>");
+        }
+
+        return sb.toString();
+    }
+
+    public static class PrefsXmlFileFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File directory, String fileName) {
+            if (fileName.endsWith(".xml") || fileName.endsWith(".XML")) {
+                return true;
+            }
+            return false;
+        }
     }
 }

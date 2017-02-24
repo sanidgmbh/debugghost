@@ -287,6 +287,10 @@ public class GhostServer {
                 case "/device":
                     page = handleDevice(page, path);
                     break;
+                case "prefs":
+                case "/prefs":
+                    page = handlePrefs(page, path);
+                    break;
                 default:
                     page = handleIndex(page, path);
                 break;
@@ -307,6 +311,14 @@ public class GhostServer {
 //        page = page.replace("{{ALERT_VISIBLE}}", GhostUtils.getNoCommandsAlert(mCommands));
         page = page.replace("{{COMMAND_LIST}}", GhostUtils.getCommandList(mCommands));
         page = page.replace("{{COMMAND_LIST_INPUT}}", GhostUtils.getCommandInputList(mCommands));
+
+        return page;
+    }
+
+    private String handlePrefs(String page, String path) {
+
+        page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
+        page = page.replace("{{SHARED_PREFS_LIST}}", GhostUtils.getSharedPreferences(mContext));
 
         return page;
     }

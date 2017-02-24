@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>DebugGhost</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- pretty print java code -->
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+
+    <script>
+        function postCommand(path, value) {
+            var form = document.getElementById("form");
+            var data = document.getElementById("data");
+            data.setAttribute("value", value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+        function postCommandValue(path, inputFieldName) {
+            var form = document.getElementById("form");
+            var data = document.getElementById("data");
+            var inputField = document.getElementById(inputFieldName);
+            data.setAttribute("value", inputField.value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+    </script>
+
+    <style>
+        body {
+          font-family: Helvetica, Arial, Sans-Serif;
+        }
+        .container {
+            margin-left: 5px;
+        }
+        .col-sm-3, .col-sm-4, .col-sm-9 {
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+        .navbar {
+            margin-bottom: 10px;
+        }
+        .container .navbar-header {
+            margin-right: 15px;
+        }
+        .alert {
+            margin-bottom: 10px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        .code {
+            font-family: "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+
+<img src="/img/ic_ghost.png" alt="DebugGhost Logo" style="float: left; padding-right: 20px; padding-left: 10px;" />
+<h2 style="padding-top: 20px; margin-top: 0px;">DebugGhost</h2>
+<div style="clear: both;"></div>
+
+<nav class="navbar navbar-default" style="margin-top: 5px;">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <img src="/img/project_application_icon.png" width="48" height="48" />
+            <span class="navbar-brand" href="/">App: {{PROJECT_NAME}}</span>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Database</a></li>
+                <li class="active"><a href="/prefs">Shared Preferences</a></li>
+                <li><a href="/device">Device Info</a></li>
+                <li><a href="/commands">Commands</a></li>
+                <li><a href="https://github.com/sanidgmbh/debugghost/wiki" target="_blank">Help</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<form id="form" action="" method="post">
+    <input id="data" type="hidden" name="data" value="schalllalaa" />
+</form>
+
+{{SHARED_PREFS_LIST}}
+
+</body>
+</html>
