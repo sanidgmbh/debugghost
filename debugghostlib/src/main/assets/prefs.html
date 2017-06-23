@@ -16,19 +16,31 @@
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 
     <script>
-        function postCommand(path, value) {
+        function postSharedPrefs(prefsFile, inputFieldName) {
+            var ghostFieldName = prefsFile + "_debugghostseperator_" + inputFieldName;
             var form = document.getElementById("form");
-            var data = document.getElementById("data");
-            data.setAttribute("value", value);
-            form.setAttribute("action", path);
-            form.submit();
-        }
-        function postCommandValue(path, inputFieldName) {
-            var form = document.getElementById("form");
-            var data = document.getElementById("data");
-            var inputField = document.getElementById(inputFieldName);
-            data.setAttribute("value", inputField.value);
-            form.setAttribute("action", path);
+
+            var prefs = document.getElementById("prefs");
+            var field = document.getElementById("field");
+            var fieldValue = document.getElementById("fieldValue");
+            var fieldType = document.getElementById("fieldType");
+
+            var inputField = document.getElementById(ghostFieldName);
+            var inputFieldType = document.getElementById(ghostFieldName + "_TYPE");
+
+            var typeValue = inputFieldType.value;
+
+            prefs.setAttribute("value", prefsFile);
+            fieldType.setAttribute("value", typeValue);
+            field.setAttribute("value", ghostFieldName);
+
+            if (typeValue == 'Boolean') {
+                fieldValue.setAttribute("value", inputField.checked);
+            } else {
+                fieldValue.setAttribute("value", inputField.value);
+            }
+
+            form.setAttribute("action", "/commands/internal_ghost_shared_prefs_command");
             form.submit();
         }
     </script>
@@ -57,6 +69,9 @@
         }
         .code {
             font-family: "Courier New", Courier, monospace;
+        }
+        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -91,10 +106,37 @@
 </nav>
 
 <form id="form" action="" method="post">
-    <input id="data" type="hidden" name="data" value="schalllalaa" />
+    <input id="prefs" type="hidden" name="prefs" value="prefsFile" />
+    <input id="field" type="hidden" name="field" value="fieldName" />
+    <input id="fieldValue" type="hidden" name="fieldValue" value="fieldValue" />
+    <input id="fieldType" type="hidden" name="fieldType" value="fieldType" />
+    <input id="returnPath" type="hidden" name="returnPath" value="prefs" />
 </form>
 
-{{SHARED_PREFS_LIST}}
+<div class="col-sm-2">
+    <div class="panel panel-info" style="margin-left: 5px; margin-right: 5px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">Infos on SharedPreferences</h3>
+        </div>
+        <div class="panel-body" style="overflow: auto;">
+            <b>Using numbers (Float, Long, Integer):</b>
+            <br />
+            If you type in a wrong, non numerical value or a float value for Long or Integer, saving the value will be ignored. You will only see an error message in the LogCat.
+            <br /><br />
+            <b>Using StringSet (HashSet):</b>
+            <br />
+            Carriage return means: new entry. Be sure to have no carriage return at the end of the textarea, otherwise you will have an empty String entry in your set.
+            <br /><br />
+            <b>Float:</b>
+            <br />
+            Float accepts dot (.) or comma (,). <i>3.3</i> is the same as <i>3,3</i>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-5">
+    {{SHARED_PREFS_LIST}}
+</div>
 
 </body>
 </html>
