@@ -259,17 +259,33 @@ public class GhostServer {
             e.printStackTrace();
         }
 
+        String returnPath = null;
         if (path.contains("commands")) {
             String command = path.substring(path.lastIndexOf("/")).replace("/", "");
 
+            String postString = postData.replace("data=", "");
+            if (postString.contains("returnPath")) {
+                try {
+                    returnPath = GhostUtils.splitQuery(postString).get("returnPath").get(0);
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception getting returnPath: " + e.getMessage());
+                    returnPath = null;
+                }
+            }
+
             Intent commandIntent = new Intent(DebugGhostService.INTENT_FILTER_COMMANDS);
             commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_NAME, command);
-            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_VALUE, postData.replace("data=", ""));
+            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_VALUE, postString);
 
             mContext.sendBroadcast(commandIntent);
         }
 
-        mGhostWebServerUtils.send301(out, "/commands");
+        if (returnPath != null) {
+            mGhostWebServerUtils.send301(out, "/"+returnPath);
+        } else {
+            mGhostWebServerUtils.send301(out, "/commands");
+        }
+
     }
 
     private void handleGet(String path, PrintWriter out) {

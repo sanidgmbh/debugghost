@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import com.sanid.lib.debugghost.commands.GhostCommand;
+import com.sanid.lib.debugghost.commands.SharedPrefsGhostCommand;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ public abstract class AbstractDebugGhostBridge {
 
     public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion) {
         this(context, databaseName, databaseVersion, 8080);
+
+        addInternalGhostCommand(new SharedPrefsGhostCommand(context, "internal_ghost_shared_prefs_command", "internal_ghost_shared_prefs_command", " "));
     }
 
     public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion, int serverPort) {
@@ -45,6 +48,10 @@ public abstract class AbstractDebugGhostBridge {
         this.mDatabaseName = databaseName;
         this.mDatabaseVersion = databaseVersion;
         this.mServerPort = serverPort;
+    }
+
+    private void addInternalGhostCommand(GhostCommand ghostCommand) {
+        mGhostCommands.put(ghostCommand.getKey(), ghostCommand);
     }
 
     public void addGhostCommand(GhostCommand ghostCommand) {
@@ -64,7 +71,7 @@ public abstract class AbstractDebugGhostBridge {
             throw new IllegalArgumentException(GhostCommand.class.getSimpleName() + ": key must not contain whitespace. Use 'this_is_my_key'-pattern!");
         } else {
             mStringCommands.add(ghostCommand.getLabel()+"~"+ghostCommand.getKey()+"~"+((value != null) ? value : ""));
-            mGhostCommands.put(ghostCommand.getKey(), ghostCommand);
+            addInternalGhostCommand(ghostCommand);
         }
     }
 

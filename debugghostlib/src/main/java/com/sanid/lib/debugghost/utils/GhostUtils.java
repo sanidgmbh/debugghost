@@ -15,10 +15,15 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -287,8 +292,7 @@ public class GhostUtils {
         StringBuilder sb = new StringBuilder();
 
         for (String prefName : prefNames) {
-            sb.append("<div class=\"col-sm-5\">");
-            sb.append("<div class=\"panel panel-info\" style=\"margin-left: 5px; margin-right: 5px;\">");
+            sb.append("<div class=\"panel panel-success\" style=\"margin-left: 5px; margin-right: 5px;\">");
             sb.append("<div class=\"panel-heading\">");
             sb.append("<h3 class=\"panel-title\">"+prefName+"</h3>");
             sb.append("</div>");
@@ -306,8 +310,14 @@ public class GhostUtils {
                 for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
                     sb.append("<tr><th>");
                     sb.append(entry.getKey());
-                    sb.append("</th><td>");
-                    sb.append(entry.getValue().toString());
+                    sb.append("</th>");
+                    sb.append("<td>");
+                    sb.append(entry.getValue().getClass().getSimpleName());
+                    sb.append("</td><td>");
+                    sb.append(getControlByType(prefName, entry.getKey(), entry.getValue(), entry.getValue().toString()));
+                    sb.append("</td>");
+                    sb.append("<td>");
+                    sb.append(getSaveControl(prefName, entry.getKey()));
                     sb.append("</td></tr>");
                 }
                 sb.append("<tbody>");
@@ -315,11 +325,73 @@ public class GhostUtils {
             }
 
             sb.append("</div>");
-            sb.append("</div>");
             sb.append("</div><div style=\"clear: both;\"></div>");
         }
 
         return sb.toString();
+    }
+
+    private static String getSaveControl(String prefsFile, String fieldName) {
+        String htmlControl = "<button value=\"save\" type=\"button\" class=\"btn btn-default\" onclick=\"postSharedPrefs('"+prefsFile+"', '"+fieldName+"');\">Save</button>";
+        return htmlControl;
+    }
+
+    private static String getControlByType(String prefs, String key, Object type, String value) {
+        String htmlControl = "";
+        String htmlControlVal = "";
+        key = prefs + "_debugghostseperator_" + key;
+        if (type instanceof Boolean) {
+            htmlControlVal = (value.equalsIgnoreCase("true")) ? "checked=\"checked\"" : "";
+            htmlControl = "<input id=\""+key+"\" type=\"checkbox\" value=\""+key+"\" "+htmlControlVal+" />";
+        } else if (type instanceof Integer) {
+            htmlControlVal = value;
+            htmlControl = "<input class=\"form-control\" type=\"number\" value=\""+htmlControlVal+"\" id=\""+key+"\">";
+        } else if (type instanceof String) {
+            htmlControlVal = value;
+            htmlControl = "<input class=\"form-control\" type=\"text\" value=\"" + htmlControlVal + "\" id=\"" + key + "\">";
+        } else if (type instanceof Float) {
+            htmlControlVal = value;
+            htmlControl = "<input class=\"form-control\" type=\"number\" value=\"" + htmlControlVal + "\" id=\"" + key + "\">";
+        } else if (type instanceof Long) {
+            htmlControlVal = value;
+            htmlControl = "<input class=\"form-control\" type=\"number\" value=\"" + htmlControlVal + "\" id=\"" + key + "\">";
+        } else if (type instanceof HashSet) {
+            StringBuilder sb = new StringBuilder();
+            HashSet<String> valueSet = (HashSet) type;
+            int rowHeight = Math.min(valueSet.size(), 5);
+            sb.append("<textarea class=\"form-control\" id=\"" + key + "\" rows=\""+rowHeight+"\" style=\"margin-top: 0px; margin-bottom: 0px;\">");
+            for (String val : valueSet) {
+                sb.append(val);
+                sb.append("\r\n");
+            }
+            sb.delete(sb.length()-2, sb.length());
+            sb.append("</textarea>");
+
+            htmlControl = sb.toString();
+        } else {
+            htmlControl = "[DebugGhost has no control configured for type '"+type.getClass().getSimpleName()+"']";
+        }
+        htmlControl += "<input id=\""+key+"_TYPE\" type=\"hidden\" value=\""+type.getClass().getSimpleName()+"\" />";
+
+        return htmlControl;
+    }
+
+    /**
+     * From http://stackoverflow.com/questions/13592236/parse-a-uri-string-into-name-value-collection
+     */
+    public static Map<String, List<String>> splitQuery(String urlQuery) throws UnsupportedEncodingException {
+        final Map<String, List<String>> query_pairs = new LinkedHashMap<>();
+        final String[] pairs = urlQuery.split("&");
+        for (String pair : pairs) {
+            final int idx = pair.indexOf("=");
+            final String key = idx > 0 ? URLDecoder.decode(pair.substring(0, idx), "UTF-8") : pair;
+            if (!query_pairs.containsKey(key)) {
+                query_pairs.put(key, new LinkedList<String>());
+            }
+            final String value = idx > 0 && pair.length() > idx + 1 ? URLDecoder.decode(pair.substring(idx + 1), "UTF-8") : null;
+            query_pairs.get(key).add(value);
+        }
+        return query_pairs;
     }
 
     public static class PrefsXmlFileFilter implements FilenameFilter {

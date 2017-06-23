@@ -30,14 +30,14 @@ import java.util.Enumeration;
 
 public class GhostWebServerUtils {
 
-    public static final String TAG = "WebServerUtils";
+    public static final String TAG = "GhostWebServerUtils";
 
     private final Context mContext;
     private String mVersion;
 
     public GhostWebServerUtils(Context context) {
         mContext = context;
-        mVersion = BuildConfig.VERSION_NAME + "["+BuildConfig.VERSION_CODE+"]";
+        mVersion = BuildConfig.VERSION_NAME + "["+ BuildConfig.VERSION_CODE+"]";
     }
 
     public String getPage(Context context, String path) {
