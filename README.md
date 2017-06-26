@@ -10,6 +10,7 @@ Current function:
 * browse and download through your projects SQLite database
 * view device infos
 * send commands to your device
+* read and write shared preferences
 
 *more features are planned, but one step after another ;)*
 
