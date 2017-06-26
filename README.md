@@ -28,6 +28,9 @@ DebugGhost is for developers and not for production purpose. Be aware of, that t
 
 ## Versions
 
+### v1.1b
+* added SharedPreferences menu to read and write shared prefs
+
 ### v1.0b
 * fixed HTTP protocol, now working in diverse browsers
 * showing app icon
