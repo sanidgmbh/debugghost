@@ -308,18 +308,21 @@ public class GhostUtils {
                 sb.append("<tbody>");
 
                 for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                    Object val = entry.getValue();
-                    if (val == null) {
-                        val = String.class.getSimpleName();
+                    Object typeClass = entry.getValue();
+                    String strVal = null;
+                    if (typeClass == null) {
+                        typeClass = String.class.getSimpleName();
+                    } else {
+                        strVal = typeClass.toString();
                     }
 
                     sb.append("<tr><th>");
                     sb.append(entry.getKey());
                     sb.append("</th>");
                     sb.append("<td>");
-                    sb.append(val.getClass().getSimpleName());
+                    sb.append(typeClass.getClass().getSimpleName());
                     sb.append("</td><td>");
-                    sb.append(getControlByType(prefName, entry.getKey(), val, val.toString()));
+                    sb.append(getControlByType(prefName, entry.getKey(), typeClass, strVal));
                     sb.append("</td>");
                     sb.append("<td>");
                     sb.append(getSaveControl(prefName, entry.getKey()));
