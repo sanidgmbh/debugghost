@@ -308,13 +308,18 @@ public class GhostUtils {
                 sb.append("<tbody>");
 
                 for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                    Object val = entry.getValue();
+                    if (val == null) {
+                        val = String.class.getSimpleName();
+                    }
+
                     sb.append("<tr><th>");
                     sb.append(entry.getKey());
                     sb.append("</th>");
                     sb.append("<td>");
-                    sb.append(entry.getValue().getClass().getSimpleName());
+                    sb.append(val.getClass().getSimpleName());
                     sb.append("</td><td>");
-                    sb.append(getControlByType(prefName, entry.getKey(), entry.getValue(), entry.getValue().toString()));
+                    sb.append(getControlByType(prefName, entry.getKey(), val, val.toString()));
                     sb.append("</td>");
                     sb.append("<td>");
                     sb.append(getSaveControl(prefName, entry.getKey()));
@@ -347,7 +352,7 @@ public class GhostUtils {
             htmlControlVal = value;
             htmlControl = "<input class=\"form-control\" type=\"number\" value=\""+htmlControlVal+"\" id=\""+key+"\">";
         } else if (type instanceof String) {
-            htmlControlVal = value;
+            htmlControlVal = (value != null) ? value : "null";
             htmlControl = "<input class=\"form-control\" type=\"text\" value=\"" + htmlControlVal + "\" id=\"" + key + "\">";
         } else if (type instanceof Float) {
             htmlControlVal = value;
