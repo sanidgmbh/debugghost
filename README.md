@@ -19,8 +19,11 @@ Follow these steps to get DebugGhost up and running in your project:
 * [include the lib in your project](../../wiki/1---Getting-started#include-the-lib-in-your-project) (only for debug build-type)
     * [as lib with jitpack.io](../../wiki/1---Getting-started#add-lib-with-jitpack.io) (no maven repo yet, sry)
     * [as module in your project](../../wiki/1---Getting-started#add-lib-as-module-in-your-project)
-* [setup Application class](../../wiki/1---Getting-started#setup-application-class) 
-    * [include DebugGhostBridge](../../wiki/1---Getting-started#include-Debugghostbridge)
+* [setup app environment](../../wiki/1---Getting-started#setup-app-environment)
+    * [using abstract application class](../../wiki/1---Getting-started#using-abstract-application-class)
+    * [using reflection (shorter way)](../../wiki/1---Getting-started#using-reflection-shorter-way)
+    * [include DebugGhostBridge](../../wiki/1---Getting-started#include-Debugghostbridge
+   
 
 [Here's a sample project for testing](https://github.com/sanidgmbh/debugghostexample)
 
@@ -28,6 +31,9 @@ Follow these steps to get DebugGhost up and running in your project:
 DebugGhost is for developers and not for production purpose. Be aware of, that this project has **no focus on security or performance**. It's meant to be used while developing your app.
 
 ## Versions
+
+### v1.1.1
+* fixed NPE for SharedPreferences menu
 
 ### v1.1b
 * added SharedPreferences menu to read and write shared prefs
