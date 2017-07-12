@@ -22,7 +22,7 @@ Follow these steps to get DebugGhost up and running in your project:
 * [setup app environment](../../wiki/1---Getting-started#setup-app-environment)
     * [using abstract application class](../../wiki/1---Getting-started#using-abstract-application-class)
     * [using reflection (shorter way)](../../wiki/1---Getting-started#using-reflection-shorter-way)
-    * [include DebugGhostBridge](../../wiki/1---Getting-started#include-Debugghostbridge
+    * [include DebugGhostBridge](../../wiki/1---Getting-started#include-Debugghostbridge)
    
 
 [Here's a sample project for testing](https://github.com/sanidgmbh/debugghostexample)
