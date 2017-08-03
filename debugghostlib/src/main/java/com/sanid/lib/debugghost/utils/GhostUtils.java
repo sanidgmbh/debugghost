@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -155,6 +156,7 @@ public class GhostUtils {
         try {
             infos.put("CPU info", readCPUInfo());
             infos.put("MEM info", readMemInfo());
+            infos.put("Camera Info", getCameraInfos(context));
         } catch (IOException ex){
 
         }
@@ -223,6 +225,69 @@ public class GhostUtils {
             ex.printStackTrace();
         }
         return result;
+    }
+
+    private static String getCameraInfos(Context context){
+        String cameraInfos = "";
+
+        if (checkCameraHardware(context)){
+            int numberOfCameras = Camera.getNumberOfCameras();
+            for (int i = 0; i < numberOfCameras; i++){
+                Camera camera = getCameraInstance(i);
+                if (camera != null) {
+                    cameraInfos += "<p>";
+                    if (i == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                        cameraInfos += "Back-Camera:<br/>";
+                    }
+                    if (i == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        cameraInfos += "Front-Camera:<br/>";
+                    }
+
+                    Camera.Parameters params = camera.getParameters();
+
+                    cameraInfos += "Focal length:" + params.getFocalLength();
+                    cameraInfos += "<br/>";
+                    cameraInfos += "Supported picture sizes:<br/>";
+
+                    List<Camera.Size> pictureSizes = params.getSupportedPictureSizes();
+                    for (Camera.Size size: pictureSizes){
+                        cameraInfos += "    " + size.width + " x " + size.width + "</br>";
+                    }
+                    //cameraInfos += "Supported picture sizes:<br/>";
+
+
+                    cameraInfos += "</p>";
+                    camera.release();
+                }
+            }
+        } else {
+            cameraInfos += "<br/>" + "Device has no camera";
+        }
+        return cameraInfos;
+    }
+
+    /** A safe way to get an instance of the Camera object. */
+    public static Camera getCameraInstance(int cameraId){
+        Camera c = null;
+        try {
+            c = Camera.open(cameraId); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+            e.printStackTrace();
+        }
+        return c; // returns null if camera is unavailable
+    }
+
+    /** Check if this device has a camera */
+    private static boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
     }
 
     private static String getHumanReadableOrientation(Context context) {
