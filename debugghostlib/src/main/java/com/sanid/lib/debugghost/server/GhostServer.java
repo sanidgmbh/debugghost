@@ -344,6 +344,7 @@ public class GhostServer {
         page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
         page = page.replace("{{DEVICE_INFOS}}", GhostUtils.getDeviceInfos(mContext));
         page = page.replace("{{SCREEN_INFOS}}", GhostUtils.getScreenInfos(mContext));
+        page = page.replace("{{HW_INFOS}}", GhostUtils.getHardwareInfos(mContext));
 
         return page;
     }
