@@ -13,8 +13,13 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
@@ -142,6 +147,82 @@ public class GhostUtils {
         sb.append("</table>");
 
         return sb.toString();
+    }
+
+    public static String getHardwareInfos(Context context) {
+        Map<String, String> infos = new LinkedHashMap<>();
+
+        try {
+            infos.put("CPU info", readCPUInfo());
+            infos.put("MEM info", readMemInfo());
+        } catch (IOException ex){
+
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<table class=\"table table-striped\">");
+        sb.append("<tbody>");
+
+        int counter = -1;
+        for (Map.Entry<String, String> deviceInfo: infos.entrySet()) {
+            counter++;
+            sb.append("<tr><th data-toggle=\"collapse\" data-target=\"#collapseme" + counter + "\">");
+            sb.append(deviceInfo.getKey());
+            sb.append("</th><td><div class=\"collapse out\" id=\"collapseme" + counter + "\">");
+            sb.append(deviceInfo.getValue());
+            sb.append("</div></td></tr>");
+        }
+        sb.append("<tbody>");
+        sb.append("</table>");
+
+        return sb.toString();
+    }
+
+    private static String readCPUInfo() throws IOException {
+        ProcessBuilder cmd;
+        String result="";
+
+        try{
+            String[] args = {"/system/bin/cat", "/proc/cpuinfo"};
+            cmd = new ProcessBuilder(args);
+
+            Process process = cmd.start();
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line = null;
+
+            while((line = in.readLine()) != null){
+                result = result + "<br/>" + line;
+            }
+            in.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    private static String readMemInfo() throws IOException {
+        ProcessBuilder cmd;
+        String result="";
+
+        try{
+            String[] args = {"/system/bin/cat", "/proc/meminfo"};
+            cmd = new ProcessBuilder(args);
+
+            Process process = cmd.start();
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line = null;
+
+            while((line = in.readLine()) != null){
+                result = result + "<br/>" + line;
+            }
+            in.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+        }
+        return result;
     }
 
     private static String getHumanReadableOrientation(Context context) {
