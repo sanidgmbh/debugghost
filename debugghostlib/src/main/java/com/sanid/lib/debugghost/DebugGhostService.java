@@ -1,5 +1,6 @@
 package com.sanid.lib.debugghost;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -26,6 +28,8 @@ import com.sanid.lib.debugghost.server.GhostServer;
 
 import java.util.ArrayList;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 public class DebugGhostService extends Service implements GhostServer.OnServerListener {
 
     private static final String LOG_TAG = "DebugGhost";
@@ -34,6 +38,7 @@ public class DebugGhostService extends Service implements GhostServer.OnServerLi
     public static final String INTENT_EXTRA_DB_VERSION = "INTENT_EXTRA_DB_VERSION";
     public static final String INTENT_EXTRA_SERVER_PORT = "INTENT_EXTRA_SERVER_PORT";
     public static final String INTENT_EXTRA_COMMAND_MAP = "INTENT_EXTRA_COMMAND_MAP";
+    public static final String INTENT_EXTRA_ASK_FOR_PERMISSIONS = "INTENT_EXTRA_ASK_FOR_PERMISSIONS";
 
     public static final String INTENT_FILTER_COMMANDS = "DebugGhostServiceCommandIntentFilter";
     public static final String INTENT_SERVICE_DEBUG_COMMAND_NAME = "INTENT_SERVICE_DEBUG_COMMAND_NAME";
@@ -109,6 +114,21 @@ public class DebugGhostService extends Service implements GhostServer.OnServerLi
             dbVersion = intent.getIntExtra(INTENT_EXTRA_DB_VERSION, -1);
             port = intent.getIntExtra(INTENT_EXTRA_SERVER_PORT, 8080);
             commands = intent.getStringArrayListExtra(INTENT_EXTRA_COMMAND_MAP);
+        }
+
+        if (intent.getBooleanExtra(INTENT_EXTRA_ASK_FOR_PERMISSIONS, false)){
+            // TODO if permissions list gets longer add those permissions to check here
+
+            PackageManager pm = getPackageManager();
+            int hasPerm = pm.checkPermission(
+                    Manifest.permission.CAMERA,
+                    getPackageName());
+            if (hasPerm != PackageManager.PERMISSION_GRANTED) {
+                Intent permissionsIntent = new Intent(this, DebugGhostPermissionsActivity.class);
+                permissionsIntent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                startActivity(permissionsIntent);
+            }
+
         }
 
         ghostServer = new GhostServer(getBaseContext(), port, dbName, dbVersion, commands);

@@ -28,6 +28,7 @@ public abstract class AbstractDebugGhostBridge {
     private final String mDatabaseName;
     private final int mDatabaseVersion;
     private final int mServerPort;
+    private boolean mAskForPermissions = false;
 
     private ArrayList<String> mStringCommands = new ArrayList<>();
 
@@ -35,6 +36,13 @@ public abstract class AbstractDebugGhostBridge {
 
     public AbstractDebugGhostBridge(Context context) {
         this(context, null, -1);
+    }
+
+    public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion, boolean askForPermissions) {
+        this(context, databaseName, databaseVersion, 8080);
+        mAskForPermissions = askForPermissions;
+
+        addInternalGhostCommand(new SharedPrefsGhostCommand(context, "internal_ghost_shared_prefs_command", "internal_ghost_shared_prefs_command", " "));
     }
 
     public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion) {
@@ -86,6 +94,7 @@ public abstract class AbstractDebugGhostBridge {
         serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_NAME, mDatabaseName);
         serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_DB_VERSION, mDatabaseVersion);
         serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_SERVER_PORT, mServerPort);
+        serviceIntent.putExtra(DebugGhostService.INTENT_EXTRA_ASK_FOR_PERMISSIONS, mAskForPermissions);
         serviceIntent.putStringArrayListExtra(DebugGhostService.INTENT_EXTRA_COMMAND_MAP, mStringCommands);
         mContext.startService(serviceIntent);
     }
