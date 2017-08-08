@@ -13,6 +13,24 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+    <script>
+        function postSQL(path, value) {
+            var form = document.getElementById("sqlForm");
+            var data = document.getElementById("data");
+            data.setAttribute("value", value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+        function postSQLValue(path, inputFieldName) {
+            var form = document.getElementById("sqlForm");
+            var data = document.getElementById("data");
+            var inputField = document.getElementById(inputFieldName);
+            data.setAttribute("value", inputField.value);
+            form.setAttribute("action", path);
+            form.submit();
+        }
+    </script>
+
     <style>
         body {
           font-family: Helvetica, Arial, Sans-Serif;
@@ -81,6 +99,21 @@
         <button type="button" class="btn btn-default">Download {{DATABASE_NAME}}</button>
     </a>
 </div>
+<div style="visibility: {{DATABASE_VISIBLE}};">
+    <div class="panel">
+        <div class="panel-heading">
+            <h3 class="panel-title">SQL statement:</h3>
+        </div>
+        <div class="panel-body">
+            <form id="sqlForm" action="/sql/" method="post">
+                <textarea id="data" name="data" class="input-lg form-control" rows="4">{{QUERY_STATEMENT}}</textarea>
+                <button type="button" class="btn btn-default" onclick="postSQL('/commands/internal_ghost_sql_command', document.getElementById('data').value)">execute</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 
 <div style="visibility: {{DATABASE_VISIBLE}};">
     <div style="clear: both;"></div>
