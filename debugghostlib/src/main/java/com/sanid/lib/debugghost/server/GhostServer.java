@@ -162,11 +162,7 @@ public class GhostServer {
                                             }
                                             break;
                                         case "POST":
-                                            //if (mGhostWebServerUtils.isSQLQuery(path)) {
-                                                //handleSQLPost(path, in, out);
-                                            //} else {
-                                                handlePost(path, in, out);
-                                            //}
+                                            handlePost(path, in, out);
                                             break;
                                         default:
                                             break;
@@ -303,53 +299,6 @@ public class GhostServer {
 
     }
 
-    private void handleSQLPost(String path, BufferedReader in, PrintWriter out) {
-        // code for reading post data from
-        // http://stackoverflow.com/questions/3033755/reading-post-data-from-html-form-sent-to-serversocket
-        String postData = "";
-        try {
-            String line;
-            Integer postDataI = 0;
-            while ((line = in.readLine()) != null && (line.length() != 0)) {
-//                System.out.println("HTTP-HEADER: " + line);
-                if (line.indexOf("Content-Length:") > -1) {
-                    postDataI = new Integer(
-                            line.substring(
-                                    line.indexOf("Content-Length:") + 16,
-                                    line.length())).intValue();
-                }
-            }
-
-            // read the post data
-            if (postDataI > 0) {
-                char[] charArray = new char[postDataI];
-                in.read(charArray, 0, postDataI);
-                postData = new String(charArray);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String returnPath = null;
-        if (path.contains("sql")) {
-
-            String postString = postData.replace("data=", "");
-            String sqlStatement = URLDecoder.decode(postString);
-            Cursor c = mDatabaseHelper.getWritableDatabase().rawQuery(sqlStatement, null);
-
-            String page = mGhostWebServerUtils.getPage(mContext, "index");
-
-            if (c != null && c.moveToFirst()) {
-            }
-            page = handleIndex(page, "db/demo");
-            mGhostWebServerUtils.writeDefaultHeader(HttpURLConnection.HTTP_OK, out, 30);
-            out.println(page);
-            out.println();
-            out.flush();
-        }
-
-    }
-
     private void handleGet(String path, PrintWriter out) {
         String page = mGhostWebServerUtils.getPage(mContext, path);
 //        String page = mGhostWebServerUtils.getPage(mContext, "/");
@@ -453,11 +402,11 @@ public class GhostServer {
                             selectedTableName = splitStatement[2];
                         }
                     }
-                    selectedTableName.replaceAll(";", "");
+                    selectedTableName = selectedTableName.replaceAll(";", "");
                     String[] splitMultipleStatements = sqlStatement.split(";");
                     if (splitMultipleStatements != null){
                         for (String splitPart: splitMultipleStatements){
-                            splitPart.replaceAll(";", "");
+                            splitPart = splitPart.replaceAll(";", "");
                             if (splitPart.length() > 8) {
                                 selectedTable = mDatabaseHelper.getHTMLTableFromQuery(splitPart);
                             }
