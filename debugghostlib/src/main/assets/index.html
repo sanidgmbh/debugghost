@@ -108,9 +108,9 @@
             </div>
             <div class="panel-body">
                 <form id="sqlForm" action="/sql/" method="post">
-                    <textarea id="data" name="data" class="input-lg form-control" rows="4"></textarea>
+                    <textarea id="data" name="data" class="input-lg form-control" rows="4">{{QUERY_STATEMENT}}</textarea>
                     <!--<a id="link" href="/sql/">  document.location.href = alert(document.getElementById('link').href + encodeURIComponent(document.getElementById('sqlTA').value))  -->
-                        <button type="button" class="btn btn-default" onclick="postSQL('/sql/', document.getElementById('data').value)">fire</button>
+                        <button type="button" class="btn btn-default" onclick="postSQL('/commands/internal_ghost_sql_command', document.getElementById('data').value)">fire</button>
                     <!--</a>-->
                 </form>
             </div>

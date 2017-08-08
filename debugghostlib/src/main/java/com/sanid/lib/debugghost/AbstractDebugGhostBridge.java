@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import com.sanid.lib.debugghost.commands.GhostCommand;
+import com.sanid.lib.debugghost.commands.Base64GhostCommand;
 import com.sanid.lib.debugghost.commands.SharedPrefsGhostCommand;
 
 import java.io.UnsupportedEncodingException;
@@ -43,12 +44,14 @@ public abstract class AbstractDebugGhostBridge {
         mAskForPermissions = askForPermissions;
 
         addInternalGhostCommand(new SharedPrefsGhostCommand(context, "internal_ghost_shared_prefs_command", "internal_ghost_shared_prefs_command", " "));
+        addInternalGhostCommand(new Base64GhostCommand(context, "internal_ghost_sql_command", "internal_ghost_sql_command", " "));
     }
 
     public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion) {
         this(context, databaseName, databaseVersion, 8080);
 
         addInternalGhostCommand(new SharedPrefsGhostCommand(context, "internal_ghost_shared_prefs_command", "internal_ghost_shared_prefs_command", " "));
+        addInternalGhostCommand(new Base64GhostCommand(context, "internal_ghost_sql_command", "internal_ghost_sql_command", " "));
     }
 
     public AbstractDebugGhostBridge(Context context, String databaseName, int databaseVersion, int serverPort) {
