@@ -55,6 +55,10 @@ public class GhostWebServerUtils {
         return (path.contains("db/download"));
     }
 
+    public boolean isSQLQuery(String path) {
+        return (path.contains("sql"));
+    }
+
     public boolean isBinary(String path) {
         String ext = getFileExt(path);
         if (ext != null) {

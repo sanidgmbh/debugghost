@@ -2,6 +2,7 @@ package com.sanid.lib.debugghost.server;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.sanid.lib.debugghost.DebugGhostService;
@@ -19,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 
 /**
@@ -159,7 +161,11 @@ public class GhostServer {
                                             }
                                             break;
                                         case "POST":
-                                            handlePost(path, in, out);
+                                            if (mGhostWebServerUtils.isSQLQuery(path)) {
+                                                handleSQLPost(path, in, out);
+                                            } else {
+                                                handlePost(path, in, out);
+                                            }
                                             break;
                                         default:
                                             break;
@@ -284,6 +290,53 @@ public class GhostServer {
             mGhostWebServerUtils.send301(out, "/"+returnPath);
         } else {
             mGhostWebServerUtils.send301(out, "/commands");
+        }
+
+    }
+
+    private void handleSQLPost(String path, BufferedReader in, PrintWriter out) {
+        // code for reading post data from
+        // http://stackoverflow.com/questions/3033755/reading-post-data-from-html-form-sent-to-serversocket
+        String postData = "";
+        try {
+            String line;
+            Integer postDataI = 0;
+            while ((line = in.readLine()) != null && (line.length() != 0)) {
+//                System.out.println("HTTP-HEADER: " + line);
+                if (line.indexOf("Content-Length:") > -1) {
+                    postDataI = new Integer(
+                            line.substring(
+                                    line.indexOf("Content-Length:") + 16,
+                                    line.length())).intValue();
+                }
+            }
+
+            // read the post data
+            if (postDataI > 0) {
+                char[] charArray = new char[postDataI];
+                in.read(charArray, 0, postDataI);
+                postData = new String(charArray);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String returnPath = null;
+        if (path.contains("sql")) {
+
+            String postString = postData.replace("data=", "");
+            String sqlStatement = URLDecoder.decode(postString);
+            Cursor c = mDatabaseHelper.getWritableDatabase().rawQuery(sqlStatement, null);
+
+            String page = mGhostWebServerUtils.getPage(mContext, "index");
+
+            if (c != null && c.moveToFirst()) {
+            }
+            page = handleIndex(page, "db/demo");
+            mGhostWebServerUtils.writeDefaultHeader(HttpURLConnection.HTTP_OK, out, 30);
+            out.println(page);
+            out.println();
+            out.flush();
         }
 
     }
