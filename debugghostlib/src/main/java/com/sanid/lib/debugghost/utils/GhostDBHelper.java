@@ -60,6 +60,47 @@ public class GhostDBHelper extends SQLiteOpenHelper {
         return sb.toString();
     }
 
+    public String getHTMLTableFromQuery(String query) {
+        StringBuilder sb = new StringBuilder();
+        String out;
+        Cursor c = null;
+        try {
+            c = sqlQuery(query);
+
+            sb.append("<table id=\"sqlTable\" class=\"table table-bordered\">");
+            sb.append("<thead>");
+            sb.append("<tr>");
+            for (int i = 0; i < c.getColumnCount(); i++) {
+                sb.append("<th>");
+                sb.append(c.getColumnName(i));
+                sb.append("</th>");
+            }
+            sb.append("</tr>");
+            sb.append("</thead>");
+
+            while (c.moveToNext()) {
+                sb.append("<tr>");
+                for (int i = 0; i < c.getColumnCount(); i++) {
+                    sb.append("<td>");
+                    sb.append(stringFromCursor(c, c.getColumnName(i)));
+                    sb.append("</td>");
+                }
+                sb.append("</tr>");
+            }
+            sb.append("</table>");
+
+            out = sb.toString();
+        } catch (SQLiteException e) {
+            out = getErrorHTML("Exception: ", e.getMessage());
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+
+        return out;
+    }
+
     public String getHTMLTable(String tableName) {
         StringBuilder sb = new StringBuilder();
         String out;
@@ -67,7 +108,7 @@ public class GhostDBHelper extends SQLiteOpenHelper {
         try {
             c = sqlQuery(QUERY_TABLE.replace("##TABLE##", tableName));
 
-            sb.append("<table class=\"table table-bordered\">");
+            sb.append("<table id=\"sqlTable\" class=\"table table-bordered\">");
             sb.append("<thead>");
             sb.append("<tr>");
             for (int i = 0; i < c.getColumnCount(); i++) {

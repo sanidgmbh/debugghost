@@ -2,9 +2,11 @@ package com.sanid.lib.debugghost.server;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.sanid.lib.debugghost.DebugGhostService;
+import com.sanid.lib.debugghost.commands.Base64GhostCommand;
 import com.sanid.lib.debugghost.utils.GhostDBHelper;
 import com.sanid.lib.debugghost.utils.GhostUtils;
 import com.sanid.lib.debugghost.utils.GhostWebServerUtils;
@@ -19,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 
 /**
@@ -263,21 +266,29 @@ public class GhostServer {
         if (path.contains("commands")) {
             String command = path.substring(path.lastIndexOf("/")).replace("/", "");
 
-            String postString = postData.replace("data=", "");
-            if (postString.contains("returnPath")) {
-                try {
-                    returnPath = GhostUtils.splitQuery(postString).get("returnPath").get(0);
-                } catch (Exception e) {
-                    Log.e(TAG, "Exception getting returnPath: " + e.getMessage());
-                    returnPath = null;
+            if (!command.equals("internal_ghost_sql_command")){
+                String postString = postData.replace("data=", "");
+                if (postString.contains("returnPath")) {
+                    try {
+                        returnPath = GhostUtils.splitQuery(postString).get("returnPath").get(0);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception getting returnPath: " + e.getMessage());
+                        returnPath = null;
+                    }
                 }
+
+                Intent commandIntent = new Intent(DebugGhostService.INTENT_FILTER_COMMANDS);
+                commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_NAME, command);
+                commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_VALUE, postString);
+
+                mContext.sendBroadcast(commandIntent);
+            } else {
+                // Ghost Command SQL
+                String postString = postData.replace("data=", "");
+                postString = URLDecoder.decode(postString);
+                returnPath = "sql/" + Base64GhostCommand.encodeBase64(postString);
+                returnPath = returnPath.replaceAll("\n", "");
             }
-
-            Intent commandIntent = new Intent(DebugGhostService.INTENT_FILTER_COMMANDS);
-            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_NAME, command);
-            commandIntent.putExtra(DebugGhostService.INTENT_SERVICE_DEBUG_COMMAND_VALUE, postString);
-
-            mContext.sendBroadcast(commandIntent);
         }
 
         if (returnPath != null) {
@@ -344,6 +355,7 @@ public class GhostServer {
         page = page.replace("{{PROJECT_NAME}}", GhostUtils.getApplicationName(mContext));
         page = page.replace("{{DEVICE_INFOS}}", GhostUtils.getDeviceInfos(mContext));
         page = page.replace("{{SCREEN_INFOS}}", GhostUtils.getScreenInfos(mContext));
+        page = page.replace("{{HW_INFOS}}", GhostUtils.getHardwareInfos(mContext));
 
         return page;
     }
@@ -359,19 +371,112 @@ public class GhostServer {
         if (mDatabaseHelper != null) {
             page = page.replace("{{DATABASE_NAME}}", mDatabaseHelper.getDbName());
 
-            String htmlTables = mDatabaseHelper.getHTMLTables();
-            page = page.replace("{{TABLE_LIST}}", htmlTables);
-
             if (path.contains("db")) {
                 selectedTableName = path.substring(path.lastIndexOf("/") + 1, path.length());
+                page = page.replace("{{QUERY_STATEMENT}}", "SELECT * from " + selectedTableName);
                 selectedTable = mDatabaseHelper.getHTMLTable(selectedTableName);
+            } else if (path.contains("sql")){
+                String sqlQueryBase64 = path.substring(path.lastIndexOf("/") + 1, path.length());
+                String sqlStatement = Base64GhostCommand.decodeBase64(sqlQueryBase64);
+                page = page.replace("{{QUERY_STATEMENT}}", sqlStatement);
+
+                if (isSelectStatement(sqlStatement)) {
+                    selectedTableName = sqlStatement;
+                    selectedTable = mDatabaseHelper.getHTMLTableFromQuery(sqlStatement);
+                } else {
+                    String[] splitStatement = sqlStatement.split(" ");
+                    if (isUpdateStatement(sqlStatement)) {
+                        if (splitStatement.length >= 2) {
+                            selectedTableName = splitStatement[1];
+                        }
+                    } else if (isInsertStatement(sqlStatement)){
+                        if (splitStatement.length >= 3) {
+                            selectedTableName = splitStatement[2];
+                        }
+                    } else if (isDeleteStatement(sqlStatement)){
+                        if (splitStatement.length >= 3) {
+                            selectedTableName = splitStatement[2];
+                        }
+                    } else {
+                        if (splitStatement.length >= 3) {
+                            selectedTableName = splitStatement[2];
+                        }
+                    }
+                    selectedTableName = selectedTableName.replaceAll(";", "");
+                    String[] splitMultipleStatements = sqlStatement.split(";");
+                    if (splitMultipleStatements != null){
+                        for (String splitPart: splitMultipleStatements){
+                            splitPart = splitPart.replaceAll(";", "");
+                            if (splitPart.length() > 8) {
+                                selectedTable = mDatabaseHelper.getHTMLTableFromQuery(splitPart);
+                            }
+                        }
+                    } else {
+                        selectedTable = mDatabaseHelper.getHTMLTableFromQuery(sqlStatement);
+                    }
+                    if (!selectedTableName.equals("<i>nothing selected</i>") && !selectedTable.startsWith("<div class=\"alert alert-danger\" role=\"alert\">") && !isDropTableStatement(sqlStatement)){
+                        selectedTable = mDatabaseHelper.getHTMLTableFromQuery("SELECT * from " + selectedTableName);
+                    }
+                }
             }
         }
+
+        String htmlTables = mDatabaseHelper.getHTMLTables();
+        page = page.replace("{{TABLE_LIST}}", htmlTables);
 
         page = page.replace("{{SELECTED_TABLE_NAME}}", selectedTableName);
         page = page.replace("{{SELECTED_TABLE}}", selectedTable);
 
+        if (selectedTableName.equals("<i>nothing selected</i>")){
+            page = page.replace("{{QUERY_STATEMENT}}", "");
+        }
+
         return page;
+    }
+
+    private boolean isSelectStatement(String statement){
+        String trimmedStatement = statement.trim();
+        if (trimmedStatement.regionMatches(true, 0, "select", 0, 6)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isUpdateStatement(String statement){
+        String trimmedStatement = statement.trim();
+        if (trimmedStatement.regionMatches(true, 0, "update", 0, 6)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isInsertStatement(String statement){
+        String trimmedStatement = statement.trim();
+        if (trimmedStatement.regionMatches(true, 0, "insert into", 0, 11)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isDeleteStatement(String statement){
+        String trimmedStatement = statement.trim();
+        if (trimmedStatement.regionMatches(true, 0, "delete from", 0, 11)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isDropTableStatement(String statement){
+        String trimmedStatement = statement.trim();
+        if (trimmedStatement.regionMatches(true, 0, "drop table", 0, 10)){
+            return true;
+        }
+
+        return false;
     }
 
     private String[] canHandleData(String input) {

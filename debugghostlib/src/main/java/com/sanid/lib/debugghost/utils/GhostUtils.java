@@ -1,5 +1,6 @@
 package com.sanid.lib.debugghost.utils;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -7,14 +8,31 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Size;
+import android.util.SizeF;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
@@ -142,6 +160,290 @@ public class GhostUtils {
         sb.append("</table>");
 
         return sb.toString();
+    }
+
+    public static String getHardwareInfos(Context context) {
+        Map<String, String> infos = new LinkedHashMap<>();
+
+        try {
+            infos.put("CPU info", readCPUInfo());
+            infos.put("MEM info", readMemInfo());
+            infos.put("Camera Info", getCameraInfos(context));
+        } catch (IOException ex){
+
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<table class=\"table table-striped\">");
+        sb.append("<tbody>");
+
+        int counter = -1;
+        for (Map.Entry<String, String> deviceInfo: infos.entrySet()) {
+            counter++;
+            sb.append("<tr><th data-toggle=\"collapse\" data-target=\"#collapseme" + counter + "\">");
+            sb.append(deviceInfo.getKey());
+            sb.append("</th><td><div class=\"collapse out\" id=\"collapseme" + counter + "\">");
+            sb.append(deviceInfo.getValue());
+            sb.append("</div></td></tr>");
+        }
+        sb.append("<tbody>");
+        sb.append("</table>");
+
+        return sb.toString();
+    }
+
+    private static String readCPUInfo() throws IOException {
+        ProcessBuilder cmd;
+        String result="";
+
+        try{
+            String[] args = {"/system/bin/cat", "/proc/cpuinfo"};
+            cmd = new ProcessBuilder(args);
+
+            Process process = cmd.start();
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line = null;
+
+            while((line = in.readLine()) != null){
+                result = result + "<br/>" + line;
+            }
+            in.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    private static String readMemInfo() throws IOException {
+        ProcessBuilder cmd;
+        String result="";
+
+        try{
+            String[] args = {"/system/bin/cat", "/proc/meminfo"};
+            cmd = new ProcessBuilder(args);
+
+            Process process = cmd.start();
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line = null;
+
+            while((line = in.readLine()) != null){
+                result = result + "<br/>" + line;
+            }
+            in.close();
+        } catch(IOException ex){
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    private static String getCameraInfos(Context context){
+        String cameraInfos = "";
+
+        if (checkCameraHardware(context)){
+            //if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            PackageManager pm = context.getPackageManager();
+            int hasPerm = pm.checkPermission(
+                    Manifest.permission.CAMERA,
+                    context.getPackageName());
+            if (hasPerm == PackageManager.PERMISSION_GRANTED) {
+                int numberOfCameras = Camera.getNumberOfCameras();
+                for (int i = 0; i < numberOfCameras; i++) {
+                    Camera camera = getCameraInstance(i);
+                    if (camera != null) {
+                        cameraInfos += "<br/>";
+
+                        if (i == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                            cameraInfos += "<h4>Back-Camera:</h4>";
+                        } else
+                        if (i == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                            cameraInfos += "<h4>Front-Camera:</h4>";
+                        } else {
+                            cameraInfos += "<h4>Camera (" + (i+1) + "):</h4>";
+                        }
+
+                        Camera.Parameters params = camera.getParameters();
+
+                        cameraInfos += "Max zoom: " + params.getMaxZoom() + "<br/>";
+
+                        cameraInfos += "Max focal length: " + params.getFocalLength();
+                        cameraInfos += "<br/>";
+
+                        List<Camera.Size> pictureSizes = params.getSupportedPictureSizes();
+                        if (pictureSizes != null) {
+                            cameraInfos += "Supported picture sizes:<br/>";
+
+                            cameraInfos += "<pre>";
+                            for (Camera.Size size : pictureSizes) {
+                                cameraInfos += size.width + " x " + size.height + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<Camera.Size> videoSizes = params.getSupportedVideoSizes();
+                        if (videoSizes != null){
+                            cameraInfos += "Supported video sizes:<br/>";
+
+                            cameraInfos += "<pre>";
+                            for (Camera.Size size : videoSizes) {
+                                cameraInfos += size.width + " x " + size.height + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+                        if (previewSizes != null){
+                            cameraInfos += "Supported preview sizes:<br/>";
+
+                            cameraInfos += "<pre>";
+                            for (Camera.Size size : previewSizes) {
+                                cameraInfos += size.width + " x " + size.height + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<int[]> supportedFpsRanges = params.getSupportedPreviewFpsRange();
+                        if (supportedFpsRanges != null) {
+                            cameraInfos += "Supported FPS ranges:<br/>";
+                            cameraInfos += "<pre>";
+                            for (int[] supportedFpsRange : supportedFpsRanges) {
+                                cameraInfos += supportedFpsRange[0]+ " - " + supportedFpsRange[1] + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<String> flashModes = params.getSupportedFlashModes();
+                        if (flashModes != null) {
+                            cameraInfos += "Supported flash modes:<br/>";
+                            cameraInfos += "<pre>";
+                            for (String flashMode : flashModes) {
+                                cameraInfos += flashMode + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<String> focusModes = params.getSupportedFocusModes();
+                        if (focusModes != null) {
+                            cameraInfos += "Supported focus modes:<br/>";
+                            cameraInfos += "<pre>";
+                            for (String focusMode : focusModes) {
+                                cameraInfos += focusMode + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<Integer> supportedPictureFormats = params.getSupportedPictureFormats();
+                        if (supportedPictureFormats != null) {
+                            cameraInfos += "Supported picture formats:<br/>";
+                            cameraInfos += "<pre>";
+                            for (Integer supportedPictureFormat : supportedPictureFormats) {
+                                if (supportedPictureFormat == ImageFormat.DEPTH16) {
+                                    cameraInfos += "DEPTH16" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.DEPTH_POINT_CLOUD) {
+                                    cameraInfos += "DEPTH_POINT_CLOUD" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.FLEX_RGB_888) {
+                                    cameraInfos += "FLEX_RGB_888" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.FLEX_RGBA_8888) {
+                                    cameraInfos += "FLEX_RGBA_8888" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.JPEG) {
+                                    cameraInfos += "JPEG" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.NV16) {
+                                    cameraInfos += "NV16" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.NV21) {
+                                    cameraInfos += "NV21" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.PRIVATE) {
+                                    cameraInfos += "PRIVATE" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.RAW10) {
+                                    cameraInfos += "RAW10" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.RAW12) {
+                                    cameraInfos += "RAW12" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.RAW_PRIVATE) {
+                                    cameraInfos += "RAW_PRIVATE" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.RAW_SENSOR) {
+                                    cameraInfos += "RAW_SENSOR" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.RGB_565) {
+                                    cameraInfos += "RGB_565" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.UNKNOWN) {
+                                    cameraInfos += "UNKNOWN" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.YUV_420_888) {
+                                    cameraInfos += "YUV_420_888" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.YUV_422_888) {
+                                    cameraInfos += "YUV_422_888" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.YUV_444_888) {
+                                    cameraInfos += "YUV_444_888" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.YUY2) {
+                                    cameraInfos += "YUY2" + "</br>";
+                                } else
+                                if (supportedPictureFormat == ImageFormat.YV12) {
+                                    cameraInfos += "YV12" + "</br>";
+                                }
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        List<String> whiteBalances = params.getSupportedWhiteBalance();
+                        if (whiteBalances != null) {
+                            cameraInfos += "Supported white balance:<br/>";
+                            cameraInfos += "<pre>";
+                            for (String whiteBalance : whiteBalances) {
+                                cameraInfos += whiteBalance + "</br>";
+                            }
+                            cameraInfos += "</pre>";
+                        }
+
+                        camera.release();
+                    }
+                }
+            } else {
+                cameraInfos += "<br/>" + "Camera permission not set. Please enable camera permission in App settings.";
+            }
+        } else {
+            cameraInfos += "<br/>" + "Device has no camera";
+        }
+        return cameraInfos;
+    }
+
+    /** A safe way to get an instance of the Camera object. */
+    public static Camera getCameraInstance(int cameraId){
+        Camera c = null;
+        try {
+            c = Camera.open(cameraId); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+            e.printStackTrace();
+        }
+        return c; // returns null if camera is unavailable
+    }
+
+    /** Check if this device has a camera */
+    private static boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
     }
 
     private static String getHumanReadableOrientation(Context context) {

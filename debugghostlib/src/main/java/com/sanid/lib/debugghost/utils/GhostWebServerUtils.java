@@ -41,7 +41,7 @@ public class GhostWebServerUtils {
     }
 
     public String getPage(Context context, String path) {
-        if (path.equals("/") || path.contains("db") || path.contains("index")) {
+        if (path.equals("/") || path.contains("db") || path.contains("index") || path.contains("sql")) {
             path = "/index";
         } else if (path.equals("/device")) {
             //path = "/index";
@@ -53,6 +53,10 @@ public class GhostWebServerUtils {
 
     public boolean isDbDownload(String path) {
         return (path.contains("db/download"));
+    }
+
+    public boolean isSQLQuery(String path) {
+        return (path.contains("sql"));
     }
 
     public boolean isBinary(String path) {
