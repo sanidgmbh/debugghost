@@ -67,7 +67,7 @@ public class GhostDBHelper extends SQLiteOpenHelper {
         try {
             c = sqlQuery(query);
 
-            sb.append("<table class=\"table table-bordered\">");
+            sb.append("<table id=\"sqlTable\" class=\"table table-bordered\">");
             sb.append("<thead>");
             sb.append("<tr>");
             for (int i = 0; i < c.getColumnCount(); i++) {
@@ -108,7 +108,7 @@ public class GhostDBHelper extends SQLiteOpenHelper {
         try {
             c = sqlQuery(QUERY_TABLE.replace("##TABLE##", tableName));
 
-            sb.append("<table class=\"table table-bordered\">");
+            sb.append("<table id=\"sqlTable\" class=\"table table-bordered\">");
             sb.append("<thead>");
             sb.append("<tr>");
             for (int i = 0; i < c.getColumnCount(); i++) {
